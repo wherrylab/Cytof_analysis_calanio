@@ -8,7 +8,7 @@
 ## This is meant to answer the question of ?? can we detect any association of CMV serostatus with T cells in circulation? ?? 
 
 #### Set wd and useful packages ---------------------------------------------------------------
-setwd("")
+#setwd("")
 library(dplyr)
 library(rio)
 library(ggplot2)
@@ -102,20 +102,28 @@ plot.height <- 14
 # In our example, the ID column header is coded as SUBJID, the CMV column contains information about the serostatus of the donors, Control column indicates the experiment number, and the 268 column after are the immunophenotypes
 # and (ii) the "response" dataframe - here the csv file exported from FlowJo 
 
-Demo = read.csv("Table_MFI.csv", header=TRUE, stringsAsFactors = F)
+Demo = read.csv("Table_MFI.csv", header=TRUE, stringsAsFactors = F,row.names = 1)
+
+#Ignore the last two rows which are the Mean and SD for each exported column from FlowJo
 #make sure your treatment variables are factors
-Demo$Group=as.factor(Demo$CMV)
+Demo = Demo[-c((nrow(Demo)),(nrow(Demo)-1)),]
+
+#Create the group column accordingly
+n1=4
+Demo$Group=as.factor(c(rep("Control",n1),rep("Treated",(nrow(Demo)-n1))))
+
 # make sure your response immunophenotypes are numeric values
-Demo[,5:33]  <- lapply(Demo[,5:33], function(x) {
+Demo[,1:(ncol(Demo)-1)]  <- lapply(Demo[,1:(ncol(Demo)-1)], function(x) {
   if(is.integer(x)) as.numeric(as.character(x)) else x
 })
 
-#### Identify the treatment variables you want to explore - for example here CMV serostatus, but you may choose several ones ---------------------------------------------------------------
+#### Identify the treatment variables you want to explore - for example here Group value, but you may choose several ones ---------------------------------------------------------------
 # you need to keep SUBJID column herein
-treatment = Demo %>% select(CMV, SUBJID)
+Demo$SUBJID=rownames(Demo)
+treatment = Demo %>% select(Group, SUBJID)
 
 #### Identify the dataset with your response variables = the CyTOF-based FlowJo-exported .csv dataset, and normalize MFIs ---------------------------------------------------------------
-CyTOF = Demo[,4:271]
+CyTOF = Demo[,1:(ncol(Demo)-2)]
 is.mfi <- grepl("^MFI.", colnames(CyTOF))
 is.percentage <- grepl("^Percentage", colnames(CyTOF))
 #MFI values are normalized using log10 transformation
@@ -141,7 +149,8 @@ CyTOF = semi_join(CyTOF, treatment, by="SUBJID")
 CyTOF = CyTOF %>% select(-SUBJID)
 
 #### Isolate covariates you need as Control in the regression ---------------------------------------------------------------
-cova = Demo %>% select(SUBJID, Control)
+#Just choosing Group as the covariable,this can be selected accordingly
+cova = Demo %>% select(SUBJID, Group)
 # merge your cova and treatment datasets
 cova = semi_join(cova, treatment, by="SUBJID")
 # remove SUBJID from both dataframes
@@ -163,5 +172,6 @@ inference.results$Comp_group <- gsub("relevelGroup, ref = ref_group", "",inferen
 export(inference.results, "inference_results.csv")
 # SelectSignificantTests
 inference.frame <- SelectSignificantTests(inference.results)
+inference.frame$Comparison=paste0(inference.frame$Comp_group,"-",inference.frame$Ref_group)
 # PlotResult
 inference.plots <- PlotResult(inference.frame)
