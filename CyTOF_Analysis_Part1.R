@@ -186,7 +186,7 @@ inference.frame$Comparison=paste0(inference.frame$Comp_group,"-",inference.frame
 inference.plots <- PlotResult(inference.frame)
 
 
-###### To be discussed
+###### Marker wise MFI plot in each subset
 var=colnames(Demo)[1:ncol(Demo)]
 for (variable in var) {
   a <- ggplot(data=Demo, aes(x=Group, y=get(variable), fill=Group))
