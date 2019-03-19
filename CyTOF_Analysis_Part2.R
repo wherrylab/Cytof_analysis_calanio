@@ -3,22 +3,24 @@
 
 library(stringr)
 library(cluster)
-source("https://bioconductor.org/biocLite.R")
-biocLite("cytofkit")
+#Install cytofkit if not previously installed
+#source("https://bioconductor.org/biocLite.R")
+#biocLite("cytofkit")
 library(cytofkit)
-
+library(flowCore)
 ##### Run Phenograph analysis on multiple samples ------------------------------------------------------------------------------------------------------------------------------------------------
 
-# Select a folder containing your fcs files to analyse (the one exported)
-dir <- "/Users/.../Desktop/CyTOF/CyTOF_Subset_Files/Project1"
+# Select a folder containing your fcs files to analyse (the subsetted one exported from FlowJo)
+dir <- "."
 # Identify files
 files <- list.files(dir ,pattern='.fcs$', full=TRUE)
 isFCSfile(files)
 # Extract flow parameters list
-fcs_file=read.FCS(filename="/Users/.../Desktop/CyTOF/CyTOF_Subset_Files/Project1/export_01_Normalized.fcs", transformation=NULL, which.lines=NULL,
+fcs_file=read.FCS(filename=files[1], transformation=NULL, which.lines=NULL,
                   alter.names=FALSE, column.pattern=NULL, invert.pattern = FALSE,
                   decades=0, ncdf = FALSE, min.limit=NULL, truncate_max_range = TRUE, dataset=NULL, emptyValue=TRUE)
 
+#Creating a parameter file after cleaning up names of parameteres in the fcs file(May or maybe not need few of the changes)
 p=toString(parameters(fcs_file)$name)
 p
 p=strsplit(p, ",")[[1]]
@@ -33,7 +35,7 @@ r=paste(r, '>')
 r
 r=str_replace_all(string=r, pattern=" ", repl="")
 r
-write(r,"/Users/.../Desktop/CyTOF/CyTOF_Subset_Files/Project1/parameters_T.txt")
+write(r,"parameters_T.txt")
 
 # Open the generated txt file with a text reader, and keep only markers of interest for analysis
 #then
@@ -42,12 +44,14 @@ paraFile <- list.files(dir, pattern='.txt$', full=TRUE)
 parameters <- as.character(read.table(paraFile, header = T)[,1])
 parameters
 
+#Selecting 10 parameters for test(Select the appropriate markers and number of cells and mergeMethod depending on the number of cells and samples)
+
 # Run phenograph function
-cytofkit(fcsFiles = files, markers = parameters,
+cytofkit(fcsFiles = files, markers = parameters[1:10],
          projectName = "cytofkit_Project1",
          transformMethod = c("cytofAsinh"),
          mergeMethod = c("ceil"), 
-         fixedNum = 20000,
+         fixedNum = 50,
          dimReductionMethod = c("tsne"),
          clusterMethods = c("Rphenograph"),
          visualizationMethods = c("tsne"),

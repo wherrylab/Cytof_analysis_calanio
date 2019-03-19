@@ -1,14 +1,25 @@
-## This R script was initially developed by Jacob Bergstedt, student of Magnus Fontes at Lund University, Sweden in 2016, in the context of the Milieu Interieur project
-## It was further edited and adapted to CyTOF analysis by Cecile Alanio, PostDoc in the Wherry Lab
-## This version is April 2019
-## It is meant to perform multiple regression analysis on FlowJo-based datasets
-## It is provided here with an example where we do want to investigate the association of CMV serology with CyTOF-generated immunophenotypes
-## For this, we run a multiple linear regression analysis, where (i) CMV serology is the treatment (= predictor = potentially having an effect), 
+## This script has been created by Cécile Alanio in the Wherry lab (version April 2019)
+## It is inspired by scripts developed by Jacob Bergstedt, at Lund University, Sweden in 2016, in the context of the Milieu Interieur project
+
+## The purpose of this script is to perform multiple regression analysis on datas extracted from FlowJo analysis of CyTOF-normalized fcs files
+
+## For a matter of clarity, we provide here with an example where we do want to investigate the association of CMV serology with CyTOF-generated immunophenotypes
+## For this, we import normalized fcs files into the FlowJo_T.wspt template provided as supplementary
+## After carefully reviewing the gates as indicated in the text, we export the pre-defined table as a .csv file, and call it here in the script
+
+## The steps described below will allow us to run a multiple linear regression analysis, where (i) CMV serology is the treatment (= predictor = potentially having an effect), 
 ## (ii) CyTOF is the response (the imprint), (iii) age, gender, tabac, BMI and batch variables are included as covariates
 ## This is meant to answer the question of ?? can we detect any association of CMV serostatus with T cells in circulation? ?? 
 
+## For ease of organization, we recommend creating a CyTOF Folder with 4 subsequent subfolders: 
+# CyTOF_Normalized_Files
+# CyTOF_Tables
+# CyTOF_Subset_Files
+# CyTOF_cytofkit
+# CyTOF_plots
+
 #### Set wd and useful packages ---------------------------------------------------------------
-#setwd("")
+setwd(".")
 library(dplyr)
 library(rio)
 library(ggplot2)
@@ -102,8 +113,7 @@ plot.height <- 14
 # In our example, the ID column header is coded as SUBJID, the CMV column contains information about the serostatus of the donors, Control column indicates the experiment number, and the 268 column after are the immunophenotypes
 # and (ii) the "response" dataframe - here the csv file exported from FlowJo 
 
-Demo = read.csv("Table_MFI.csv", header=TRUE, stringsAsFactors = F,row.names = 1)
-
+Demo = read.csv("Table.csv", header=TRUE, stringsAsFactors = F,row.names = 1)
 #Ignore the last two rows which are the Mean and SD for each exported column from FlowJo
 #make sure your treatment variables are factors
 Demo = Demo[-c((nrow(Demo)),(nrow(Demo)-1)),]
@@ -116,8 +126,7 @@ Demo$Group=as.factor(c(rep("Control",n1),rep("Treated",(nrow(Demo)-n1))))
 Demo[,1:(ncol(Demo)-1)]  <- lapply(Demo[,1:(ncol(Demo)-1)], function(x) {
   if(is.integer(x)) as.numeric(as.character(x)) else x
 })
-
-#### Identify the treatment variables you want to explore - for example here Group value, but you may choose several ones ---------------------------------------------------------------
+#### Identify the treatment variables you want to explore - for example here CMV serostatus, but you may choose several ones ---------------------------------------------------------------
 # you need to keep SUBJID column herein
 Demo$SUBJID=rownames(Demo)
 treatment = Demo %>% select(Group, SUBJID)
@@ -149,7 +158,6 @@ CyTOF = semi_join(CyTOF, treatment, by="SUBJID")
 CyTOF = CyTOF %>% select(-SUBJID)
 
 #### Isolate covariates you need as Control in the regression ---------------------------------------------------------------
-#Just choosing Group as the covariable,this can be selected accordingly
 cova = Demo %>% select(SUBJID, Group)
 # merge your cova and treatment datasets
 cova = semi_join(cova, treatment, by="SUBJID")
@@ -173,5 +181,36 @@ export(inference.results, "inference_results.csv")
 # SelectSignificantTests
 inference.frame <- SelectSignificantTests(inference.results)
 inference.frame$Comparison=paste0(inference.frame$Comp_group,"-",inference.frame$Ref_group)
+
 # PlotResult
 inference.plots <- PlotResult(inference.frame)
+
+##### Sasi - I want to put these plots in /Users/.../Desktop/CyTOF/CyTOF_plots/Project1
+
+
+
+
+
+###### To be discussed
+var=colnames(Demo)[3:110]
+for (variable in var) {
+  a <- ggplot(data=Demo, aes(x=Group, y=get(variable), fill=Group))
+  a <- a + geom_boxplot(colour="black", width=0.3, fatten=1, alpha=0.6, size=0.8, outlier.shape=NA)
+  a <- a + geom_jitter(width=0.1, size=3, alpha=1)
+  a <- a + scale_fill_manual(values = brewer.colours.CMV)
+  a <- a + theme_bw()
+  a <- a + ylab(paste0("%", variable))
+  a <- a + theme(legend.title=element_blank()) 
+  a <- a + theme(legend.position="none")
+  a <- a + theme(axis.text=element_text(size=12, face="bold"), axis.text.x=element_text(vjust=17, size=12, face="bold"))
+  a <- a + theme(panel.border = element_rect(linetype = "solid", size=1, colour = "black"))
+  a <- a + theme(axis.title=element_text(size=12, face="bold"),axis.ticks=element_line(size=1))
+  a
+  ggsave(filename=paste0(variable, ".pdf"), plot=a, device="pdf", path="/Users/.../Desktop/CyTOF/CyTOF_plots/Project1", width=5, height=3)
+}
+
+
+l=lm(data=Demo, Percentage.CD8.EMRA ~ Group)
+summary(l)
+my=anova(l)
+my
