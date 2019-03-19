@@ -185,14 +185,9 @@ inference.frame$Comparison=paste0(inference.frame$Comp_group,"-",inference.frame
 # PlotResult
 inference.plots <- PlotResult(inference.frame)
 
-##### Sasi - I want to put these plots in /Users/.../Desktop/CyTOF/CyTOF_plots/Project1
-
-
-
-
 
 ###### To be discussed
-var=colnames(Demo)[3:110]
+var=colnames(Demo)[1:ncol(Demo)]
 for (variable in var) {
   a <- ggplot(data=Demo, aes(x=Group, y=get(variable), fill=Group))
   a <- a + geom_boxplot(colour="black", width=0.3, fatten=1, alpha=0.6, size=0.8, outlier.shape=NA)
@@ -206,11 +201,6 @@ for (variable in var) {
   a <- a + theme(panel.border = element_rect(linetype = "solid", size=1, colour = "black"))
   a <- a + theme(axis.title=element_text(size=12, face="bold"),axis.ticks=element_line(size=1))
   a
-  ggsave(filename=paste0(variable, ".pdf"), plot=a, device="pdf", path="/Users/.../Desktop/CyTOF/CyTOF_plots/Project1", width=5, height=3)
+  ggsave(filename=paste0(variable, ".pdf"), plot=a, device="pdf", path=".", width=5, height=3)
 }
 
-
-l=lm(data=Demo, Percentage.CD8.EMRA ~ Group)
-summary(l)
-my=anova(l)
-my
