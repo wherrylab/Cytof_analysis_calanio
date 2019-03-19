@@ -187,7 +187,7 @@ inference.plots <- PlotResult(inference.frame)
 
 
 ###### Marker wise MFI plot in each subset
-var=colnames(Demo)[1:ncol(Demo)]
+var=colnames(Demo)[1:(ncol(Demo)-3)]
 for (variable in var) {
   a <- ggplot(data=Demo, aes(x=Group, y=get(variable), fill=Group))
   a <- a + geom_boxplot(colour="black", width=0.3, fatten=1, alpha=0.6, size=0.8, outlier.shape=NA)
@@ -201,6 +201,6 @@ for (variable in var) {
   a <- a + theme(panel.border = element_rect(linetype = "solid", size=1, colour = "black"))
   a <- a + theme(axis.title=element_text(size=12, face="bold"),axis.ticks=element_line(size=1))
   a
-  ggsave(filename=paste0(variable, ".pdf"), plot=a, device="pdf", path=".", width=5, height=3)
+  ggsave(filename=paste0(variable, ".pdf"), plot=a, device="pdf", path=file.path(".", "Plots"), width=5, height=3)
 }
 
