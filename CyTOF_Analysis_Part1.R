@@ -26,6 +26,7 @@ library(ggplot2)
 library(RColorBrewer)
 library(stringr)
 library(scales)
+library(ggthemes)
 
 brewer.set <- "Set1"
 brewer.colours.CMV <- brewer_pal(palette = brewer.set)(5)[c(5,1)]
@@ -96,7 +97,9 @@ PlotResult <- function(sign.effects.plot.frame){
     plt <- ggplot(plt.vars, aes(x = reorder(legend, desc(mean)), y = mean, ymin = lower, ymax = higher))
     plt <- plt+geom_point(size = 1, shape=21, fill="purple") + geom_errorbar(width=0.7, position=position_dodge(0.05), color="purple")
     plt <- plt+coord_flip()+ggtitle(sign.treatment)
-    plt <- plt+xlab("")+theme_bw() + theme(plot.title=element_text(size=12, face="bold"), panel.grid.major = element_line(colour = "gray80"), axis.text =element_text(size = font.size, face="bold"), axis.title = element_text(size =font.size, face="bold"), legend.title = element_text(size = font.size, face="bold"))
+    plt <- plt+xlab("")+theme_par(base_size = 40) + theme(plot.title=element_text(size=12, face="bold"), panel.grid.major = element_line(colour = "gray80"), axis.text =element_text(size = font.size, face="bold"), axis.title = element_text(size =font.size, face="bold"), legend.title = element_text(size = font.size, face="bold"),axis.title.x = element_text(face="bold", size=20),
+                                                          axis.text.x  = element_text(size=16),axis.title.y = element_text(face="bold", size=20),
+                                                          axis.text.y  = element_text(size=16))
     plt <- plt+ylab("Effect size") +  guides(colour = guide_legend(title = "Significant (FDR < 0.05)"))
     plt <- plt+facet_grid(.~Comparison)
     ggsave(filename = file.path(path, paste0(sign.treatment, ".pdf")), plt, width = plot.width, height = plot.height)
