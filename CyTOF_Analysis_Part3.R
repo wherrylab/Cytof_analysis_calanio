@@ -6,16 +6,13 @@ setwd(".")
 library(ggplot2)
 library(RColorBrewer)
 library(scales)
-
 library(dplyr)
 library(rio)
-
 library(stringr)
-
 library(pheatmap)
 
 brewer.set <- "Set1"
-brewer.colours.CMV <- brewer_pal(palette = brewer.set)(5)[c(5,1)]
+brewer.colours.treated <- brewer_pal(palette = brewer.set)(5)[c(5,1)]
 brewer.colours.3colors <- brewer_pal(palette = brewer.set)(3)[c(1,2,3)]
 
 font_family="Helvetica"
@@ -55,13 +52,12 @@ for (variable in var) {
 }
 # You can evaluate the mean or other statistical parameters using
 #Table %>% group_by(Group) %>% summarise(mean(cluster_2))
-# You can evaluate the significance among groups using the regression code below
+# You can evaluate the significance of individual clusters among groups using the regression code below
 
 #l=lm(data=Table, cluster_11 ~ Group)
-#l=lm(data=Table, cluster_1 ~ Group)
-
 #summary(l)
 
+# You can evaluate the significance among all groups using the loop below
 ClusterModelEstimates=data.frame(Cluster=NA,Estimate=NA,pvalue=NA)
 for(i in 3:ncol(Table)){
   Table_sub=Table[,c(2,i)]
@@ -74,11 +70,36 @@ ClusterModelEstimates=na.omit(ClusterModelEstimates)
 
 ClusterModelEstimates_sig=ClusterModelEstimates[ClusterModelEstimates$pvalue<0.1,]
 
+# You can create a table with P-values and estimates for all clusters
 rownames(Table)=Table$SUBJID
 anno_rows=data.frame(Table[,2])
 rownames(anno_rows)=rownames(Table)
 colnames(anno_rows)="Group"
 pheatmap(Table[,ClusterModelEstimates_sig$Cluster],scale = "row",annotation_row = anno_rows,main = "Signficant Cluster percentages between Groups",cellwidth = 20,cellheight = 20)
+
+# And/or you can create a heatmap of percentages on significant clusters
+# For this, annotate the columns first
+Table$SUBJID=NULL
+Table$Group=NULL
+annotation_c = as.data.frame(t(Table[1,]))
+d=rownames(annotation_c)
+annotation_c <- as.data.frame(append(annotation_c, "NS", after = 2))
+names(annotation_c)[names(annotation_c)=="X.NS."] <- "Treated_vs_Control"
+annotation_c$X1 <- NULL
+rownames(annotation_c)=d
+levels(annotation_c$Treated_vs_Control) <- c(levels(annotation_c$Treated_vs_Control),"Up", "Down")
+# Identify here each significant cluster and indicate direction of the effect (up or down as compared to ref group = pos or neg estimate)
+annotation_c[20,1] <- c("Up")
+annotation_c[1,1] <- c("Up")
+annotation_c[15,1] <- c("Up")
+annotation_c[23,1] <- c("Down")
+Treated_vs_Control       <- brewer_pal(palette = brewer.set)(8)[c(4,8)]
+names(Treated_vs_Control) <- c("Up", "Down")
+anno_colors <- list(Treated_vs_Control = Treated_vs_Control)
+#You can generate the heatmap on all clusters
+pheatmap(mat = Table, color=seq.brew, annotation_col = annotation_c, annotation_row = annotation,annotation_colors = anno_colors, scale = "row", cluster_rows = TRUE, cluster_cols = TRUE, filename = "/Users/calanio/Desktop/CyTOF/CyTOF_plots/Project1/Heatmap_per.pdf", width = 7, height = 5)
+# Or - recommended - you can generate the heatmap on selected significant clusters
+pheatmap(mat = Table[,c(20,1,15,23)], color=seq.brew, annotation_col = annotation_c, annotation_row = annotation,annotation_colors = anno_colors, scale = "row", cluster_rows = TRUE, cluster_cols = TRUE, filename = "/Users/.../Desktop/CyTOF/CyTOF_plots/Project1/Heatmap_per_sign.pdf", width = 7, height = 5)
 
 # As a second step, we will examinate the composition of each cluster in term of expression of the markers used in our unbiased analysis
 # Transpose cytofkit_Project1_Rphenograph_cluster_median_data.csv and add "Marker" to first column
@@ -101,7 +122,10 @@ for(i in 1:ncol(Pheno)){
 #Pheno = read.csv("cytofkit_Project1_Rphenograph_cluster_median_data_norm.csv", sep=",", header=TRUE, stringsAsFactors = TRUE)
 rownames(Pheno)=Pheno$Marker
 Pheno$Marker=NULL
+
 # You can generate the heatmap on all clusters
-
 pheatmap(Pheno,scale = "column",main = "Normalized median marker expression clusterwise",cellwidth = 20,cellheight = 20)
+pheatmap(mat = Pheno, color=seq.brew, annotation_col = annotation_c, annotation_colors = anno_colors, ascale = "row", cluster_rows = TRUE, cluster_cols = F, filename = "./file.pdf", width = 10, height = 5)
 
+# Or - recommended - you can generate the heatmap on selected significant clusters
+pheatmap(mat = Pheno[,c(20,1,15,23)], fontsize=7, annotation_col = annotation_c, annotation_colors = anno_colors, color=seq.brew, scale = "row", cluster_rows = TRUE, cluster_cols = TRUE,  filename = "./file.pdf", width = 6, height = 5)

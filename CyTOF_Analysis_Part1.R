@@ -1,15 +1,12 @@
-## This script has been created by Cécile Alanio in the Wherry lab (version April 2019)
-## It is inspired by scripts developed by Jacob Bergstedt, at Lund University, Sweden in 2016, in the context of the Milieu Interieur project
-
 ## The purpose of this script is to perform multiple regression analysis on datas extracted from FlowJo analysis of CyTOF-normalized fcs files
 
-## For a matter of clarity, we provide here with an example where we do want to investigate the association of CMV serology with CyTOF-generated immunophenotypes
-## For this, we import normalized fcs files into the FlowJo_T.wspt template provided as supplementary
-## After carefully reviewing the gates as indicated in the text, we export the pre-defined table as a .csv file, and call it here in the script
+## For a matter of clarity, we provide here an example where we do investigate the association of a given treatment with CyTOF-generated immunophenotypes
+## For this, we import normalized fcs files into a predefined FlowJo_T.wspt template
+## After carefully reviewing the gates, we export the pre-defined table as a .csv file, and call it here in the script
 
-## The steps described below will allow us to run a multiple linear regression analysis, where (i) CMV serology is the treatment (= predictor = potentially having an effect), 
-## (ii) CyTOF is the response (the imprint), (iii) age, gender, tabac, BMI and batch variables are included as covariates
-## This is meant to answer the question of ?? can we detect any association of CMV serostatus with T cells in circulation? ?? 
+## The steps described below will allow us to run a multiple linear regression analysis, where (i) Group is the treatment (= 'treated versus control' = predictor), 
+## (ii) CyTOF is the response, (iii) age, gender, tabac, BMI,..., and batch variables can be included as Control/covariates
+## This is meant to answer the question: ?? can we detect any association of treatment with features of T cells in circulation? ?? 
 
 ## For ease of organization, we recommend creating a CyTOF Folder with 4 subsequent subfolders: 
 # CyTOF_Normalized_Files
@@ -29,7 +26,7 @@ library(scales)
 library(ggthemes)
 
 brewer.set <- "Set1"
-brewer.colours.CMV <- brewer_pal(palette = brewer.set)(5)[c(5,1)]
+brewer.colours.treated <- brewer_pal(palette = brewer.set)(5)[c(5,1)]
 font_family="Helvetica"
 
 #### Set up 4 Functions: CreateModelList, GetLmNames, FitLinearModels2, SelectSignificantTests, and PlotResult --------
@@ -107,13 +104,13 @@ PlotResult <- function(sign.effects.plot.frame){
 }
 
 #### Define graphical parameters ---------------------------------------------------------------
-font.size=9
+font.size=14
 plot.width <- 20
 plot.height <- 14
 
 #### Upload 2 dataframes ---------------------------------------------------------------
-# (i) the Demo, a table where each line is a donor identified by an ID, and in columns you will have included your "treatment" variables such as Group serostatus, as well as all other needed "Control" covariates, 
-# In our example, the ID column header is coded as SUBJID, the CMV column contains information about the serostatus of the donors, Control column indicates the experiment number, and the 268 column after are the immunophenotypes
+# (i) the Demo, a table where each line is a donor identified by an ID, and in columns you will have included your "treatment" variables in "Group", as well as all other needed "Control" covariates, 
+# In our example, the ID column header is coded as SUBJID, the Group column contains information about the status (Control versus Treated) of the donors, and the Control column indicates the experiment number
 # and (ii) the "response" dataframe - here the csv file exported from FlowJo 
 
 Demo = read.csv("Table.csv", header=TRUE, stringsAsFactors = F,row.names = 1)
