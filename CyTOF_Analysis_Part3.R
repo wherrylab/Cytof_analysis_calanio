@@ -14,6 +14,7 @@ library(pheatmap)
 brewer.set <- "Set1"
 brewer.colours.treated <- brewer_pal(palette = brewer.set)(5)[c(5,1)]
 brewer.colours.3colors <- brewer_pal(palette = brewer.set)(3)[c(1,2,3)]
+seq.brew <- brewer_pal(type = "seq", palette = 16)(9)
 
 font_family="Helvetica"
 font.size <- 12
@@ -28,7 +29,7 @@ str(analysis_results)
 
 # As a first step, we will evaluate clusters proportion, their differences among compared groups, and plot
 # Transpose cytofkit_Project1_Rphenograph_cluster_cell_percentage.csv and add "Cluster" to first column
-Table = read.csv("cytofkit_Project1_Rphenograph_cluster_cell_percentage.csv", sep=",", header=TRUE, stringsAsFactors = F)
+Table = read.csv("cytofkit_Project1_Rphenograph_cluster_cell_percentage.csv", sep=";", header=TRUE, stringsAsFactors = F)
 str(Table)
 Table$Group=as.factor(Table$Group)
 attach(Table)
@@ -39,7 +40,7 @@ for (variable in var) {
   a <- ggplot(data=Table, aes(x=Group, y=get(variable), fill=Group))
   a <- a + geom_boxplot(colour="black", width=0.3, fatten=1, alpha=0.6, size=0.8, outlier.shape=NA)
   a <- a + geom_jitter(width=0.1, size=3, alpha=1)
-  a <- a + scale_fill_manual(values = brewer.colours.CMV)
+  a <- a + scale_fill_manual(values = brewer.colours.treated)
   a <- a + theme_bw()
   a <- a + ylab(paste0("%", variable))
   a <- a + theme(legend.title=element_blank()) 
@@ -68,40 +69,20 @@ for(i in 3:ncol(Table)){
 }
 ClusterModelEstimates=na.omit(ClusterModelEstimates)
 
+# You can export a table with P-values and estimates for all clusters
+export(ClusterModelEstimates, "ClusterModelEstimates.csv")
+# or for significant clusters
 ClusterModelEstimates_sig=ClusterModelEstimates[ClusterModelEstimates$pvalue<0.1,]
+export(ClusterModelEstimates_sig, "ClusterModelEstimates_sig.csv")
 
-# You can create a table with P-values and estimates for all clusters
+# You can create a heatmap of proportions of significant clusters
 rownames(Table)=Table$SUBJID
 anno_rows=data.frame(Table[,2])
 rownames(anno_rows)=rownames(Table)
 colnames(anno_rows)="Group"
 pheatmap(Table[,ClusterModelEstimates_sig$Cluster],scale = "row",annotation_row = anno_rows,main = "Signficant Cluster percentages between Groups",cellwidth = 20,cellheight = 20)
 
-# And/or you can create a heatmap of percentages on significant clusters
-# For this, annotate the columns first
-Table$SUBJID=NULL
-Table$Group=NULL
-annotation_c = as.data.frame(t(Table[1,]))
-d=rownames(annotation_c)
-annotation_c <- as.data.frame(append(annotation_c, "NS", after = 2))
-names(annotation_c)[names(annotation_c)=="X.NS."] <- "Treated_vs_Control"
-annotation_c$X1 <- NULL
-rownames(annotation_c)=d
-levels(annotation_c$Treated_vs_Control) <- c(levels(annotation_c$Treated_vs_Control),"Up", "Down")
-# Identify here each significant cluster and indicate direction of the effect (up or down as compared to ref group = pos or neg estimate)
-annotation_c[20,1] <- c("Up")
-annotation_c[1,1] <- c("Up")
-annotation_c[15,1] <- c("Up")
-annotation_c[23,1] <- c("Down")
-Treated_vs_Control       <- brewer_pal(palette = brewer.set)(8)[c(4,8)]
-names(Treated_vs_Control) <- c("Up", "Down")
-anno_colors <- list(Treated_vs_Control = Treated_vs_Control)
-#You can generate the heatmap on all clusters
-pheatmap(mat = Table, color=seq.brew, annotation_col = annotation_c, annotation_row = annotation,annotation_colors = anno_colors, scale = "row", cluster_rows = TRUE, cluster_cols = TRUE, filename = "/Users/calanio/Desktop/CyTOF/CyTOF_plots/Project1/Heatmap_per.pdf", width = 7, height = 5)
-# Or - recommended - you can generate the heatmap on selected significant clusters
-pheatmap(mat = Table[,c(20,1,15,23)], color=seq.brew, annotation_col = annotation_c, annotation_row = annotation,annotation_colors = anno_colors, scale = "row", cluster_rows = TRUE, cluster_cols = TRUE, filename = "/Users/.../Desktop/CyTOF/CyTOF_plots/Project1/Heatmap_per_sign.pdf", width = 7, height = 5)
-
-# As a second step, we will examinate the composition of each cluster in term of expression of the markers used in our unbiased analysis
+## As a second step, we will investigate the composition of each cluster in term of expression of the markers used in our unbiased analysis
 # Transpose cytofkit_Project1_Rphenograph_cluster_median_data.csv and add "Marker" to first column
 # Calulate the mean for each marker accross all clusters, and normalize each column with the mean 
 # Copy normalized datas to a new csv file entitled "cytofkit_Project1_Rphenograph_cluster_median_data_norm.csv"
@@ -123,9 +104,26 @@ for(i in 1:ncol(Pheno)){
 rownames(Pheno)=Pheno$Marker
 Pheno$Marker=NULL
 
-# You can generate the heatmap on all clusters
-pheatmap(Pheno,scale = "column",main = "Normalized median marker expression clusterwise",cellwidth = 20,cellheight = 20)
-pheatmap(mat = Pheno, color=seq.brew, annotation_col = annotation_c, annotation_colors = anno_colors, ascale = "row", cluster_rows = TRUE, cluster_cols = F, filename = "./file.pdf", width = 10, height = 5)
-
+# You can then generate a heatmap on all clusters
+pheatmap(mat = Pheno, color=seq.brew, ascale = "row", cluster_rows = TRUE, cluster_cols = F, filename = "./file.pdf", width = 10, height = 5)
 # Or - recommended - you can generate the heatmap on selected significant clusters
-pheatmap(mat = Pheno[,c(20,1,15,23)], fontsize=7, annotation_col = annotation_c, annotation_colors = anno_colors, color=seq.brew, scale = "row", cluster_rows = TRUE, cluster_cols = TRUE,  filename = "./file.pdf", width = 6, height = 5)
+# Annotate the columns first
+Pheno_sig=Pheno[,c(paste0("cluster_",c(2,13,17,27,28)))]
+annotation_c = as.data.frame(t(Pheno_sig[1,]))
+d=rownames(annotation_c)
+annotation_c <- as.data.frame(append(annotation_c, "NS", after = 2))
+annotation_c <- data.frame(annotation_c[,c(2)])
+rownames(annotation_c)=d
+colnames(annotation_c)<- "Treated_vs_Control"
+levels(annotation_c$Treated_vs_Control) <- c(levels(annotation_c$Treated_vs_Control),"Up", "Down")
+# Identify each significant cluster and indicate direction of the effect (up or down as compared to ref group = pos or neg estimate)
+annotation_c["cluster_2",1] <- c("Down")
+annotation_c["cluster_13",1] <- c("Up")
+annotation_c["cluster_17",1] <- c("Up")
+annotation_c["cluster_27",1] <- c("Down")
+annotation_c["cluster_28",1] <- c("Down")
+Treated_vs_Control       <- brewer_pal(palette = brewer.set)(8)[c(4,8)]
+names(Treated_vs_Control) <- c("Up", "Down")
+anno_colors <- list(Treated_vs_Control = Treated_vs_Control)
+
+pheatmap(mat = Pheno_sig, fontsize=7, annotation_col = annotation_c, annotation_colors = anno_colors, color=seq.brew, scale = "row", cluster_rows = TRUE, cluster_cols = TRUE,  filename = "./file.pdf", width = 6, height = 5)
