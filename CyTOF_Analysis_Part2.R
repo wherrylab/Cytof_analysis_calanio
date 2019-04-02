@@ -20,7 +20,7 @@ fcs_file=read.FCS(filename=files[1], transformation=NULL, which.lines=NULL,
                   alter.names=FALSE, column.pattern=NULL, invert.pattern = FALSE,
                   decades=0, ncdf = FALSE, min.limit=NULL, truncate_max_range = TRUE, dataset=NULL, emptyValue=TRUE)
 
-#Creating a parameter file after cleaning up names of parameteres in the fcs file(May or maybe not need few of the changes)
+#Create a parameter text file after cleaning up names of parameters in one of the fcs file
 p=toString(parameters(fcs_file)$name)
 p
 p=strsplit(p, ",")[[1]]
@@ -44,14 +44,12 @@ paraFile <- list.files(dir, pattern='.txt$', full=TRUE)
 parameters <- as.character(read.table(paraFile, header = T)[,1])
 parameters
 
-#Selecting 10 parameters for test(Select the appropriate markers and number of cells and mergeMethod depending on the number of cells and samples)
-
 # Run phenograph function
 cytofkit(fcsFiles = files, markers = parameters[1:10],
          projectName = "cytofkit_Project1",
          transformMethod = c("cytofAsinh"),
          mergeMethod = c("ceil"), 
-         fixedNum = 50,
+         fixedNum = 20000,
          dimReductionMethod = c("tsne"),
          clusterMethods = c("Rphenograph"),
          visualizationMethods = c("tsne"),
