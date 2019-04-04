@@ -1,14 +1,14 @@
-## The purpose of this script is to perform multiple regression analysis on datas extracted from FlowJo analysis of CyTOF-normalized fcs files
+## The purpose of this script is to perform multiple regression analysis on data extracted from FlowJo analysis of CyTOF-normalized fcs files
 
-## For a matter of clarity, we provide here an example where we do investigate the association of a given treatment with CyTOF-generated immunophenotypes
-## For this, we import normalized fcs files into a predefined FlowJo_T.wspt template
-## After carefully reviewing the gates, we export the pre-defined table as a .csv file, and call it here in the script
+## For a matter of clarity,provided here is an example where the association of a given treatment with CyTOF-generated immunophenotypes is investigated
+## For doing this,normalized fcs files are imported into a predefined FlowJo_T.wspt template
+## After carefully reviewing the gates,the pre-defined table  is exported as a .csv file, and loaded here in this script
 
-## The steps described below will allow us to run a multiple linear regression analysis, where (i) Group is the treatment (= 'treated versus control' = predictor), 
+## The steps described below will allow us to run  multiple linear regression analysis, where (i) Group is the treatment (= 'treated versus control' = predictor), 
 ## (ii) CyTOF is the response, (iii) age, gender, tabac, BMI,..., and batch variables can be included as Control/covariates
-## This is meant to answer the question: ?? can we detect any association of treatment with features of T cells in circulation? ?? 
+## This is meant to answer the question: ??For example can any significant association of treatment with features of T cells in circulation can be detected? ?? 
 
-## For ease of organization, we recommend creating a CyTOF Folder with 4 subsequent subfolders: 
+## For ease of organization,creating a CyTOF Folder with the following subfolders is recommended: 
 # CyTOF_Normalized_Files
 # CyTOF_Tables
 # CyTOF_Subset_Files
@@ -131,7 +131,7 @@ Demo[,1:(ncol(Demo)-1)]  <- lapply(Demo[,1:(ncol(Demo)-1)], function(x) {
 Demo$SUBJID=rownames(Demo)
 treatment = Demo %>% select(Group, SUBJID)
 
-#### Identify the dataset with your response variables = the CyTOF-based FlowJo-exported .csv dataset, and normalize MFIs ---------------------------------------------------------------
+#### Identify the dataet with your response variables = the CyTOF-based FlowJo-exported .csv dataet, and normalize MFIs ---------------------------------------------------------------
 CyTOF = Demo[,1:(ncol(Demo)-2)]
 is.mfi <- grepl("^MFI.", colnames(CyTOF))
 is.percentage <- grepl("^Percentage", colnames(CyTOF))
@@ -142,8 +142,8 @@ CyTOF=cbind(CyTOF[,is.percentage],log10(CyTOF[,is.mfi]))
 CyTOF_SUBJID = select(Demo, SUBJID)
 CyTOF= bind_cols(CyTOF, CyTOF_SUBJID)
 
-# you may want to consider an approach for imputing missing NA values
-# we suggest to normalize by the mean as in below:
+# Approach for imputing missing NA values
+# Normalization by the mean as in below is recommended:
 
 # count NA values in each column
 sapply(CyTOF, function(x) sum(is.na(x)))
@@ -152,14 +152,14 @@ for(i in 1:ncol(CyTOF)){
   CyTOF[is.na(CyTOF[,i]), i] <- mean(CyTOF[,i], na.rm = TRUE)
 }
 
-#### Merge your CyTOF and treatment datasets ---------------------------------------------------------------
+#### Merge your CyTOF and treatment dataets ---------------------------------------------------------------
 CyTOF = semi_join(CyTOF, treatment, by="SUBJID")
 # remove SUBJID
 CyTOF = CyTOF %>% select(-SUBJID)
 
 #### Isolate covariates you need as Control in the regression ---------------------------------------------------------------
 cova = Demo %>% select(SUBJID, Group)
-# merge your cova and treatment datasets
+# merge your cova and treatment dataets
 cova = semi_join(cova, treatment, by="SUBJID")
 # remove SUBJID from both dataframes
 cova = cova %>% select(-SUBJID)

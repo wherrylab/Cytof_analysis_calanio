@@ -1,5 +1,5 @@
 ## This script has been created by Cécile Alanio in the Wherry lab (version April 2019)
-## It details how to process Phenograph analysis on CyTOF datas
+## It details how to process Phenograph analysis on CyTOF data
 
 library(stringr)
 library(cluster)
@@ -18,7 +18,7 @@ isFCSfile(files)
 # Extract flow parameters list
 fcs_file=read.FCS(filename=files[1], transformation=NULL, which.lines=NULL,
                   alter.names=FALSE, column.pattern=NULL, invert.pattern = FALSE,
-                  decades=0, ncdf = FALSE, min.limit=NULL, truncate_max_range = TRUE, dataset=NULL, emptyValue=TRUE)
+                  decades=0, ncdf = FALSE, min.limit=NULL, truncate_max_range = TRUE, dataet=NULL, emptyValue=TRUE)
 
 #Create a parameter text file after cleaning up names of parameters in one of the fcs file
 p=toString(parameters(fcs_file)$name)
@@ -59,5 +59,5 @@ cytofkit(fcsFiles = files, markers = parameters[1:10],
          saveObject = TRUE, openShinyAPP = TRUE)
 
 # This will generate a folder that you can store in a general CyTOF_cytofkit folder
-# The processing of generated datas is explained in CyTOF_Analysis_Part3
+# The processing of generated data is explained in CyTOF_Analysis_Part3
 
