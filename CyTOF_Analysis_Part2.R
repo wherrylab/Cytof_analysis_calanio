@@ -1,5 +1,4 @@
-## This script has been created by Cécile Alanio in the Wherry lab (version April 2019)
-## It details how to process Phenograph analysis on CyTOF data
+## This script details how we process Phenograph analysis on CyTOF data using the cytofkit package developed by others previously
 
 library(stringr)
 library(cluster)
