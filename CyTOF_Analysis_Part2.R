@@ -23,7 +23,7 @@ fcs_file=read.FCS(filename=files[1], transformation=NULL, which.lines=NULL,
 p=toString(parameters(fcs_file)$name)
 p
 p=strsplit(p, ",")[[1]]
-p
+pceil
 q=toString(parameters(fcs_file)$desc)
 q
 q=strsplit(q, ",")[[1]]
@@ -47,8 +47,7 @@ parameters
 cytofkit(fcsFiles = files, markers = parameters[1:10],
          projectName = "cytofkit_Project1",
          transformMethod = c("cytofAsinh"),
-         mergeMethod = c("ceil"), 
-         fixedNum = 20000,
+         mergeMethod = c("min"),
          dimReductionMethod = c("tsne"),
          clusterMethods = c("Rphenograph"),
          visualizationMethods = c("tsne"),
