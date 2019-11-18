@@ -131,7 +131,7 @@ Demo[,1:(ncol(Demo)-1)]  <- lapply(Demo[,1:(ncol(Demo)-1)], function(x) {
 Demo$SUBJID=rownames(Demo)
 treatment = Demo %>% select(Group, SUBJID)
 
-#### Identify the dataet with your response variables = the CyTOF-based FlowJo-exported .csv dataet, and normalize MFIs ---------------------------------------------------------------
+#### Identify the dataset with your response variables = the CyTOF-based FlowJo-exported .csv dataet, and normalize MFIs ---------------------------------------------------------------
 CyTOF = Demo[,1:(ncol(Demo)-2)]
 is.mfi <- grepl("^MFI.", colnames(CyTOF))
 is.percentage <- grepl("^Percentage", colnames(CyTOF))
@@ -192,7 +192,7 @@ for (variable in var) {
   a <- ggplot(data=Demo, aes(x=Group, y=get(variable), fill=Group))
   a <- a + geom_boxplot(colour="black", width=0.3, fatten=1, alpha=0.6, size=0.8, outlier.shape=NA)
   a <- a + geom_jitter(width=0.1, size=3, alpha=1)
-  a <- a + scale_fill_manual(values = brewer.colours.CMV)
+  a <- a + scale_fill_manual(values = brewer.colours.treated)
   a <- a + theme_bw()
   a <- a + ylab(paste0("%", variable))
   a <- a + theme(legend.title=element_blank()) 
